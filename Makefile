@@ -1,0 +1,54 @@
+include .env
+
+.PHONY: all push
+.SILENT: clean help
+
+all: build	push
+	
+build: auth-service evaluation-service analytics-service flag-service targeting-service
+
+auth:
+	docker build --tag=auth-service:v1 ./auth-service/
+	docker tag auth-service:v1 ${AWS_AUTH_SERVICE_ECR}auth-service:v1
+
+evaluation:
+	docker build --tag=evaluation-service:v1 ./evaluation-service/
+	docker tag evaluation-service:v1 ${AWS_EVALUATION_SERVICE_ECR}evaluation-service:v1
+
+analytics:
+	docker build --tag=analytics-service:v1 ./analytics-service/
+	docker tag analytics-service:v1 ${AWS_ANALYTICS_SERVICE_ECR}analytics-service:v1
+
+flag:
+	docker build --tag=flag-service:v1 ./flag-service/
+	docker tag flag-service:v1 ${AWS_FLAG_SERVICE_ECR}flag-service:v1
+
+targeting:
+	docker build --tag=targeting-service:v1 ./targeting-service/
+	docker tag targeting-service:v1 ${AWS_TARGETING_SERVICE_ECR}targeting-service:v1
+
+push:
+	docker push ${AWS_AUTH_SERVICE_ECR}auth-service:v1
+	docker push ${AWS_EVALUATION_SERVICE_ECR}evaluation-service:v1
+	docker push ${AWS_ANALYTICS_SERVICE_ECR}analytics-service:v1
+	docker push ${AWS_FLAG_SERVICE_ECR}flag-service:v1
+	docker push ${AWS_TARGETING_SERVICE_ECR}targeting-service:v1
+
+clean:
+	docker rmi -f auth-service:v1 2> /dev/null
+	docker rmi -f evaluation-service:v1 2> /dev/null
+	docker rmi -f analytics-service:v1 2> /dev/null
+	docker rmi -f flag-service:v1 2> /dev/null
+	docker rmi -f targeting-service:v1 2> /dev/null
+	
+help:
+	echo "Available targets:"
+	echo "    all (default) 	- Follow the default process to build all the contanier images and send them to the private AWS ECR registry"
+	echo "    build         	- Build all the contanier images"
+	echo "    auth    				- Build only the  contanier image"
+	echo "    evaluation  		- Build only the  contanier image"
+	echo "    analytics   		- Build only the  contanier image"
+	echo "    flag      		  - Build only the  contanier image"
+	echo "    targeting   		- Build only the  contanier image"
+	echo "    push         		- Send all the container images to the private AWS ECR registry"
+	echo "    clean      			- Remove all the images generated in the make process"
