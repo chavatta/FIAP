@@ -6,15 +6,88 @@ services:
     image: auth-service:v1
     hostname: auth-service
     ports:
-      - 8001:8001
+      - ${AUTH_PORT:?}:8001
     environment:
-      DATABASE_URL: ${DATABASE_URL:?}
+      DATABASE_URL: ${AUTH_DATABASE_URL:?}
       MASTER_KEY: ${MASTER_KEY:?}
     restart: unless-stopped
     depends_on:
       - auth-service-db
     networks:
-      - auth-network
+      - services-network
+      - databases-network
+
+  evaluation-service:
+    container_name: evaluation-service
+    image: evaluation-service:v1
+    hostname: evaluation-service
+    ports:
+      - ${EVALUATION_PORT:?}:8004
+    environment:
+      REDIS_URL: ${REDIS_URL:?}
+      FLAG_SERVICE_URL: ${FLAG_SERVICE_URL:?} 
+      TARGETING_SERVICE_URL: ${TARGETING_SERVICE_URL:?} 
+      SERVICE_API_KEY: ${SERVICE_API_KEY:?}
+      AWS_SQS_URL: ${AWS_SQS_URL:?} 
+      AWS_REGION: ${AWS_REGION:?} 
+    restart: unless-stopped
+    depends_on:
+      - auth-service
+      - flag-service
+      - targeting-service
+    networks:
+      - services-network
+      - cache-network
+
+  analytics-service:
+    container_name: analytics-service
+    image: analytics-service:v1
+    hostname: analytics-service
+    ports:
+      - ${ANALYTICS_PORT:?}:8005
+    environment:
+      AWS_SQS_URL: ${AWS_SQS_URL:?}
+      AWS_DYNAMODB_TABLE: ${AWS_DYNAMODB_TABLE:?}
+      AWS_REGION: ${AWS_REGION:?}
+    restart: unless-stopped
+    depends_on:
+      - analytics-service-db
+    networks:
+      - services-network
+
+  targeting-service:
+    container_name: targeting-service
+    image: targeting-service:v1
+    hostname: targeting-service
+    ports:
+      - ${TARGETING_PORT:?}:8003
+    environment:
+      TARGETING_DATABASE_URL: ${TARGETING_DATABASE_URL:?}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:?}
+    restart: unless-stopped
+    depends_on:
+      - targeting-service-db
+      - auth-service
+    networks:
+      - service-network
+      - databases-network
+
+  flag-service:
+    container_name: flag-service
+    image: flag-service:v1
+    hostname: flag-service
+    ports:
+      - ${FLAG_PORT:?}:8002
+    environment:
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:?}
+      FLAG_DATABASE_URL: ${FLAG_DATABASE_URL:?}
+    restart: unless-stopped
+    depends_on:
+      - flag-service-db
+      - auth-service
+    networks:
+      - services-network
+      - databases-network
 
   auth-service-db:
     container_name: auth-service-db
@@ -25,13 +98,62 @@ services:
     volumes:
       - ./auth-service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:?}
-      POSTGRES_USER: ${POSTGRES_USER:?}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: ${AUTH_POSTGRES_DB:?}
+      POSTGRES_USER: ${AUTH_POSTGRES_USER:?}
+      POSTGRES_PASSWORD: ${AUTH_POSTGRES_PASSWORD:?}
     restart: unless-stopped
     networks:
-      - auth-network
+      - databases-network
+
+  targeting-service-db:
+    container_name: targeting-service-db
+    image: postgres:16 
+    hostname: targeting-service-db
+    ports:
+      - 5432:5432
+    volumes:
+      - ./targeting-service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_DB: ${TARGETING_POSTGRES_DB:?}
+      POSTGRES_USER: ${TARGETING_POSTGRES_USER:?}
+      POSTGRES_PASSWORD: ${TARGETING_POSTGRES_PASSWORD:?}
+    restart: unless-stopped
+    networks:
+      - databases-network
+
+  flag-service-db:
+    container_name: flag-service-db
+    image: postgres:16 
+    hostname: flag-service-db
+    ports:
+      - 5432:5432
+    volumes:
+      - ./flag-service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_DB: ${FLAG_POSTGRES_DB:?}
+      POSTGRES_USER: ${FLAG_POSTGRES_USER:?}
+      POSTGRES_PASSWORD: ${FLAG_POSTGRES_PASSWORD:?}
+    restart: unless-stopped
+    networks:
+      - databases-network
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    hostname: redis
+    ports:
+      - 6379:6379
+    restart: unless-stopped
+    networks:
+      - cache-network
+
 
 networks:
-  auth-network:
+  services-network:
     driver: bridge
+  databases-network:
+    driver: bridge
+    internal: true
+  cache-network:
+    driver: bridge 
+    internal: true
