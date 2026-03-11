@@ -51,6 +51,19 @@ Para realizar o fluxo completo de **remover as imagens**, realizar o **build** e
 make
 ```
 
+# Rodando a Stack
+Para rodar o docker-compose com todos os serviços e suas devidas dependencias utilize o seguinte comando:
+
+```sh
+docker compose up -d
+```
+
+e para parar utilize:
+
+```sh
+docker compose down
+```
+---
 ### TO DO
 - [ ] Criar script de login na AWS (make aws) e adicionar as variaveis no .env
 - [ ] Completar as variaveis vazias do .env
