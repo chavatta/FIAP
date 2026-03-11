@@ -1,11 +1,11 @@
 include .env
 
-.PHONY: all push
-.SILENT: clean help
+.PHONY: all build auth evaluation analytics flag targeting push clean
+.SILENT: auth evaluation analytics flag targeting push clean help
 
-all: build	push
+all: build push
 	
-build: auth-service evaluation-service analytics-service flag-service targeting-service
+build: auth evaluation analytics flag targeting
 
 auth:
 	docker build --tag=auth-service:v1 ./auth-service/
@@ -45,10 +45,10 @@ help:
 	echo "Available targets:"
 	echo "    all (default) 	- Follow the default process to build all the contanier images and send them to the private AWS ECR registry"
 	echo "    build         	- Build all the contanier images"
-	echo "    auth    				- Build only the  contanier image"
+	echo "    auth    			- Build only the  contanier image"
 	echo "    evaluation  		- Build only the  contanier image"
 	echo "    analytics   		- Build only the  contanier image"
-	echo "    flag      		  - Build only the  contanier image"
+	echo "    flag      		- Build only the  contanier image"
 	echo "    targeting   		- Build only the  contanier image"
 	echo "    push         		- Send all the container images to the private AWS ECR registry"
-	echo "    clean      			- Remove all the images generated in the make process"
+	echo "    clean      		- Remove all the images generated in the make process"
