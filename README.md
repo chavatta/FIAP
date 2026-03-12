@@ -3,12 +3,12 @@
 Repositorio para todas as aplicacoes conteinerizadas do Challenge da Fase 2.
 
 ## Pre requisitos
-- Docker >=
-- Docker compose >=
-- Make >=
-- Python >=
-- Go >=
-- AWS CLI >=
+- Docker >= 29.3.0
+- Docker compose >= 5.1.0
+- Make >= 4.3
+- Python >= 3.11
+- Go >= 1.22.2
+- AWS CLI >= 
 
 ## Build
 Para montar as imagens docker das aplicações use o comando a seguir:
