@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: evaluation-config
+  namespace: evaluation
+data:
+  EVALUATION_POSTGRES_DB: evaluation_db
+  EVALUATION_POSTGRES_USER: evaluation_user
+  APP_ENV: production
+  APP_PORT: "8080"

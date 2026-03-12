@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: ghcr.io/togglemaster/auth-service:latest
+          image: auth-service:v1
           imagePullPolicy: IfNotPresent
 
           ports:
@@ -32,6 +32,14 @@ spec:
           env:
             - name: DATABASE_URL
               value: postgres://$(AUTH_POSTGRES_USER):$(AUTH_POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(AUTH_POSTGRES_DB)
+          
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
 
           readinessProbe:
             httpGet:
