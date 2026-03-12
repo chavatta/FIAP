@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flag-config
+  namespace: flag
+data:
+  FLAG_POSTGRES_DB: flag_db
+  FLAG_POSTGRES_USER: flag_user
+  APP_ENV: production
+  APP_PORT: "8080"
+
