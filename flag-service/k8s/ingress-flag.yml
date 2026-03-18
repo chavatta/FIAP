@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flag-ingress
+  namespace: flag
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api.fiap.local
+      http:
+        paths:
+          - path: /flags
+            pathType: Prefix
+            backend:
+              service:
+                name: flag-service
+                port:
+                  number: 80
+

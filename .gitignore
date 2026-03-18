@@ -1,0 +1,7 @@
+# Segredos — nunca commitar
+labsuser.pem
+*.pem
+ssourl.txt
+.env
+__pycache__/
+*.pyc
