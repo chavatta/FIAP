@@ -1,30 +1,48 @@
-# Executar no PowerShell na pasta do projeto (com Git instalado):
-#   .\scripts\do-commit.ps1
-# Instalar Git: https://git-scm.com/download/win ou winget install Git.Git
+# Executar: .\scripts\do-commit.ps1
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 Set-Location (Split-Path $PSScriptRoot -Parent)
-if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    Write-Error "Git nao encontrado. Instale Git for Windows e abra um novo terminal."
+
+$gitExe = $null
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    $gitExe = "git"
+} else {
+    $pf86 = [Environment]::GetFolderPath("ProgramFilesX86")
+    foreach ($p in @(
+        "$env:ProgramFiles\Git\cmd\git.exe",
+        "$env:ProgramFiles\Git\bin\git.exe",
+        "$pf86\Git\cmd\git.exe"
+    )) {
+        if (Test-Path -LiteralPath $p) { $gitExe = $p; break }
+    }
 }
+if (-not $gitExe) {
+    Write-Error "Git nao encontrado. winget install Git.Git e reabra o terminal."
+}
+
+function Invoke-Git { & $gitExe @args }
+
 if (-not (Test-Path .git)) {
-    git init
-    git branch -M main
+    Invoke-Git init
+    Invoke-Git branch -M main
 }
-git add -A
-git status
-git commit -m @"
+Invoke-Git add -A
+Invoke-Git status
+
+# Mensagem multilinha (here-string literal @' '@ evita erro com linhas que comecam em -)
+$commitMsg = @'
 chore: ajustes stack FIAP, docs AWS/K8s e compose
 
 - docker-compose: redes, portas DB, redis, credenciais analytics (EC2)
 - flag/targeting: FLAG_/TARGETING_DATABASE_URL
 - evaluation: toFloat64, fetchRule 404, io.ReadAll
 - auth: log seguro em validate
-- k8s: secrets, portas 8002-8004, redis evaluation
-- docs: LEARNER-LAB, AWS-DEPLOY-ORDEM, CONEXAO-SSH, README checklist
-- Makefile aws target, scripts ec2-user-data
-- .gitignore: pem, ssourl, .env
-"@
+- k8s: secrets, portas, redis evaluation
+- docs: LEARNER-LAB, AWS-DEPLOY-ORDEM, CONEXAO-SSH
+- scripts ec2-user-data; .gitignore
+'@
 
-Write-Host "Commit concluido. Para enviar: git remote add origin <url> && git push -u origin main" -ForegroundColor Green
+Invoke-Git commit -m $commitMsg
+
+Write-Host "Commit concluido. Push: git remote add origin <url> && git push -u origin main" -ForegroundColor Green
