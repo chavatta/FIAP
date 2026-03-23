@@ -66,6 +66,8 @@ docker compose down
 
 Antes de rodar, crie um arquivo `.env` na raiz baseado em `.env.example`.
 
+**Windows:** Veja `docs/WINDOWS-SETUP.md` para o passo a passo completo.
+
 ## Checklist (stack local)
 
 1. **Chave de API do evaluation** — `SERVICE_API_KEY` no `.env` deve ser uma chave **criada no auth**: `POST /admin/keys` com header `Authorization: Bearer <MASTER_KEY>`. O valor inicial `chave_secreta` não funciona até você gerar e colar a chave retornada.
