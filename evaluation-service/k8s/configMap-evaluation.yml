@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: evaluation-config
+  namespace: evaluation
+data:
+  PORT: "8004"
+  # ElastiCache Redis (Academy / PDF)
+  # Substitua __ELASTICACHE_ENDPOINT__ pelo endpoint do seu cluster Redis gerenciado.
+  REDIS_URL: "redis://__ELASTICACHE_ENDPOINT__:6379"
+  FLAG_SERVICE_URL: "http://flag-service.flag.svc.cluster.local"
+  TARGETING_SERVICE_URL: "http://targeting-service.targeting.svc.cluster.local"
+  AWS_REGION: "us-east-1"
+  # Deixe vazio se não usar SQS; preencha a URL da fila em produção
+  AWS_SQS_URL: "__SQS_QUEUE_URL__"
