@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if ! command -v envsubst >/dev/null 2>&1; then
+  echo "envsubst nao encontrado. Instale gettext, ex.:" >&2
+  echo "  sudo dnf install -y gettext   # Amazon Linux 2023 / CloudShell" >&2
+  echo "  sudo apt-get install -y gettext-envsubst   # Debian/Ubuntu" >&2
+  exit 1
+fi
+
 # Render manifest templates using ${AWS_*} values from the project's .env.
 # Why: Kubernetes does not interpolate env vars inside YAML, but the PDF requires
 # that deployments reference images published to ECR.

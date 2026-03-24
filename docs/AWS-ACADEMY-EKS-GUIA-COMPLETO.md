@@ -30,7 +30,7 @@ No Kubernetes você vai instalar:
 
 ---
 
-## 1) EKS (Console) — criar cluster usando LabRole
+## 1) EKS (Console) — criar cluster usando LabRole `ok`
 
 1. AWS Console → **EKS** → **Add cluster** → **Create**.
 2. **Name**: ex. `fiap-fase2`.
@@ -41,20 +41,20 @@ No Kubernetes você vai instalar:
    - Subnets: selecione as subnets padrão.
 6. **Create** e aguarde status **ACTIVE**.
 
-### 1.1) Node Group (Managed Node Group) — usar LabRole
+### 1.1) Node Group (Managed Node Group) — usar LabRole `ok`
 
 1. No cluster → aba **Compute** → **Add node group**.
-2. **Node IAM role**: selecione **`LabRole`** (isso é o ponto crítico no Academy).
-3. **Instance type**: escolha um tipo permitido pelo lab (ex.: `t3.small`/`t3.medium` conforme disponibilidade).
+2. **Node IAM role**: selecione **`LabRole`** (isso é o ponto crítico no Academy).d
+3. **Instance type**: escolha um tipo permitido pelo lab (ex.: `ccdw`/`t3.medium` conforme disponibilidade).
 4. **Scaling configuration** (exemplo do PDF):
    - Min = 1
    - Desired = 2
-   - Max = 4
+   - Max = 4  
 5. Criar e aguardar ficar **ACTIVE**.
 
 ---
 
-## 2) ECR (Console) — criar 5 repositórios
+## 2) ECR (Console) — criar 5 repositórios `ok`
 
 ### 3.1) Criar repositórios no ECR (Console)
 
@@ -68,7 +68,7 @@ Crie exatamente estes 5:
 - `evaluation-service`
 - `analytics-service`
 
-### 2.1) (Console) URIs/endereços do ECR
+### 2.1) (Console) URIs/endereços do ECR `ok`
 
 Depois de criar os repositórios, abra cada um e anote:
 
@@ -86,7 +86,7 @@ Você precisa de 3 bancos gerenciados (um por serviço relacional):
 - `flag-service` (Postgres)
 - `targeting-service` (Postgres)
 
-### 4.1) Console (RDS)
+### 3.1) Console (RDS)
 
 AWS Console → **RDS** → **Create database**
 
@@ -304,4 +304,8 @@ hey -z 60s -c 50 "$LB/evaluation/evaluate?user_id=user-123&flag_name=enable-new-
 
 - **Analytics sem credenciais**:
   - No Academy, o acesso AWS vem da role do node group (LabRole). Não injete `AWS_ACCESS_KEY_ID` em secrets no cluster.
+
+---
+
+> **CloudShell:** Para usar CLI em vez do Console, veja [`docs/AWS-ACADEMY-CLOUDSHELL.md`](./AWS-ACADEMY-CLOUDSHELL.md).
 

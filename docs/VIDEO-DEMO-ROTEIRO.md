@@ -102,6 +102,12 @@ Ponto de fala:
 
 - `evaluation-service` é o hot-path, usa Redis (cache) e consulta `flag-service` e `targeting-service`.
 
+**Se aparecer `{"error":"Erro interno ao avaliar a flag"}`:**
+
+1. Verifique se criou a flag e a regra (passos 3 e 4) **usando a mesma KEY**.
+2. O `SERVICE_API_KEY` no `.env` **deve ser a key retornada** no passo 1. Se alterou o `.env`, reinicie: `docker-compose restart evaluation-service`.
+3. Verifique logs: `docker-compose logs evaluation-service` — o erro real aparece lá (ex.: "flag-service retornou status 401" = chave inválida).
+
 ---
 
 ## Parte 2 — Nuvem (EKS) (7:00–16:00)
