@@ -192,14 +192,16 @@ wsl bash scripts/stress-test-evaluation.sh --lb "$LB" --duration 60s --concurren
 
 Mostrar replicas subindo (`kubectl get pods -n evaluation`).
 
-### 11) Analytics: SQS → CPU → HPA (18:00–19:00)
+### 11) Analytics: SQS → worker → DynamoDB (HPA opcional) (18:00–19:00)
 
-- Enviar várias mensagens para a fila (mesmo payload do evaluation): no **PowerShell** (Windows) `.\scripts\send-sqs-evaluation-events.ps1 -Count 200` com `$env:AWS_SQS_URL` e `$env:AWS_REGION` definidos; no **CloudShell/WSL**, `./scripts/send-sqs-evaluation-events.sh --count 200`. Alternativa: console SQS (Send message).
-- Em terminal:
+- Enviar várias mensagens para a fila (mesmo payload do evaluation): no **CloudShell** (recomendado; credenciais locais do Academy costumam ter deny em `sqs:SendMessage`), `./scripts/send-sqs-evaluation-events.sh --count 200` — por padrão usa **SendMessageBatch** (até 10 msgs por chamada; muito mais rápido). Flags: `--no-batch`, `--batch-size 10`. No Windows, o `.ps1` equivalente (`-BatchSize`, `-NoBatch`); alternativa: console SQS (Send message).
+- O **HPA do analytics** está em **CPU** (`HPA-analytics.yml`). O worker gasta tempo em **rede** (long poll SQS, DynamoDB), não em CPU — é normal ver **`cpu: 0%/70%`** e **1 réplica** mesmo com fila cheia. Isso não indica falha; o demo forte aqui é **logs do pod** + **itens no DynamoDB** (passo 12), não réplicas subindo.
+- Para acompanhar:
 
 ```powershell
+kubectl logs -n analytics deploy/analytics-deployment -f --tail=50
+kubectl top pods -n analytics
 while ($true) { kubectl get hpa -n analytics; Start-Sleep 2 }
-while ($true) { kubectl get pods -n analytics; Start-Sleep 2 }
 ```
 
 ### 12) Provar dados no DynamoDB (19:00–19:30)
@@ -218,7 +220,7 @@ No console DynamoDB:
   - Pods no EKS OK
   - Ingress OK
   - HPA evaluation OK
-  - HPA analytics OK
+  - Pipeline analytics (SQS → worker → DynamoDB) OK; HPA por CPU no analytics pode ficar em 1 réplica (I/O-bound)
   - DynamoDB OK
 - Explicar rapidamente propósito dos datastores:
   - **RDS** (relacional / transacional)
