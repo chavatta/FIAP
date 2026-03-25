@@ -71,6 +71,11 @@ def require_auth(f):
 def health():
     return jsonify({"status": "ok"})
 
+# Via Ingress prefix /flags, probes hit /flags/health — must not match /flags/<name> (auth).
+@app.route('/flags/health', methods=['GET'])
+def health_behind_ingress_prefix():
+    return jsonify({"status": "ok"})
+
 @app.route('/flags', methods=['POST'])
 @require_auth
 def create_flag():

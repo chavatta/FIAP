@@ -239,6 +239,8 @@ No CloudShell, após ter RDS/ElastiCache e as imagens no ECR:
 ```bash
 git clone https://github.com/chavatta/FIAP.git && cd FIAP
 cp .env.eks.example .env
+sudo dnf install -y gettext
+chmod +x scripts/render-k8s-manifests.sh scripts/k8s-apply.sh
 # Edite .env (nano .env) com ECR, SQS, RDS, ElastiCache, etc.
 # Se ./scripts/... der "Permission denied", rode: chmod +x scripts/render-k8s-manifests.sh scripts/k8s-apply.sh
 ./scripts/render-k8s-manifests.sh

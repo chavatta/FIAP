@@ -150,7 +150,7 @@ kubectl get ingress -A
 3) Copiar o DNS/IP do Load Balancer e testar:
 
 ```powershell
-$LB = "http://SEU-LB-DNS-OU-IP"
+$LB = "http://ab30b59d003074c8caf2fe1cb93f3a4b-66409170b442619e.elb.us-east-1.amazonaws.com"
 
 Invoke-WebRequest -Uri "$LB/auth/health" -UseBasicParsing | Select-Object -ExpandProperty Content
 Invoke-WebRequest -Uri "$LB/flags/health" -UseBasicParsing | Select-Object -ExpandProperty Content
@@ -194,7 +194,7 @@ Mostrar replicas subindo (`kubectl get pods -n evaluation`).
 
 ### 11) Analytics: SQS → CPU → HPA (18:00–19:00)
 
-- No console SQS, enviar várias mensagens manualmente (ou via CLI).
+- Enviar várias mensagens para a fila (mesmo payload do evaluation): no **PowerShell** (Windows) `.\scripts\send-sqs-evaluation-events.ps1 -Count 200` com `$env:AWS_SQS_URL` e `$env:AWS_REGION` definidos; no **CloudShell/WSL**, `./scripts/send-sqs-evaluation-events.sh --count 200`. Alternativa: console SQS (Send message).
 - Em terminal:
 
 ```powershell
