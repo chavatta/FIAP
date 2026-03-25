@@ -11,14 +11,13 @@
 
 ## Ordem sugerida de apply
 
-0. (Imagens no ECR) Execute `scripts/render-k8s-manifests.sh` para renderizar os manifests em `k8s-rendered/` usando o `.env` (AWS_*).
-   Depois, aplique os manifests renderizados em `k8s-rendered/` (e não os templates originais).
+0. (Imagens no ECR) Preencha `.env` com variáveis `RDS_*`, `ELASTICACHE_ENDPOINT`, `SQS_QUEUE_URL`, `SERVICE_API_KEY`, etc. Rode `scripts/render-k8s-manifests.sh` (`envsubst` substitui `${...}` nos YAML). Aplique o que estiver em `k8s-rendered/`, não os templates crus em `*-service/k8s/`.
 Detalhes: Para provisionar o cluster e dependencias do HPA/Ingress (metrics-server + ingress-nginx), use `docs/EKS-OpA-100-PDF.md`.
 
 1. Namespaces (`namespace-*.yml`).
 2. Postgres por serviço (Helm/bitnami ou manifestos próprios). Ajuste hosts nos Secrets:
    - `auth`: `DATABASE_URL` em `secret-auth.yml`
-   - `flag`: `FLAG_DATABASE_URL` em `secret-flag.yml` (ex.: `__RDS_FLAG_ENDPOINT__`)
+   - `flag`: `FLAG_DATABASE_URL` em `secret-flag.yml` (valores via `.env` + render)
    - `targeting`: `TARGETING_DATABASE_URL` em `secret-targeting.yml`
 3. **evaluation**: (Academy/PDF) provisione e use **ElastiCache Redis**; depois aplique ConfigMap/Secret/Deployment do evaluation.
    - O `redis-evaluation.yml` fica apenas como opcao (debug local) e nao deve ser necessario no cenario com ElastiCache.

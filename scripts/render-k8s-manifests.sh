@@ -47,6 +47,8 @@ export __RDS_TARGETING_DB__="${RDS_TARGETING_DB:-}"
 export __RDS_TARGETING_USER__="${RDS_TARGETING_USER:-}"
 export __RDS_TARGETING_PASSWORD__="${RDS_TARGETING_PASSWORD:-}"
 
+export SERVICE_API_KEY="${SERVICE_API_KEY:-}"
+
 SERVICES_DIRS=(
   "auth-service/k8s"
   "flag-service/k8s"

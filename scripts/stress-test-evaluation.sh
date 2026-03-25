@@ -32,7 +32,7 @@ Uso:
 
 Opções:
   --local                  Usa http://localhost:8004
-  --lb <base_url>          Base URL do Load Balancer (ex.: http://xxxxx.elb.amazonaws.com)
+  --lb <base_url>          Base URL do LB (ex.: http://xxx.elb.amazonaws.com ou só o hostname — vira http://)
                            O script chama /evaluation/evaluate no LB.
   --url <url_completa>     URL completa do endpoint /evaluate (ignora --local/--lb)
 
@@ -100,6 +100,11 @@ if [ -z "$FULL_URL" ]; then
     exit 1
   fi
 
+  # Hostname sozinho (ex.: xxx.elb.amazonaws.com) → prefixar http://
+  if [[ "$BASE_URL" != http://* ]] && [[ "$BASE_URL" != https://* ]]; then
+    BASE_URL="http://${BASE_URL}"
+  fi
+
   # Se for LB, o path no Ingress é /evaluation/...
   if [[ "$BASE_URL" == http*://localhost* ]]; then
     FULL_URL="${BASE_URL}/evaluate?user_id=${USER_ID}&flag_name=${FLAG_NAME}"
@@ -127,9 +132,10 @@ if command -v ab >/dev/null 2>&1; then
 fi
 
 echo "Erro: instale 'hey' ou 'ab' para rodar o stress test." >&2
+echo "Dica (CloudShell / Amazon Linux):"
+echo "  sudo dnf install -y httpd-tools   # fornece o ab (ApacheBench)"
 echo "Dica (macOS):"
 echo "  brew install hey"
-echo "  # ou"
-echo "  brew install httpd  # fornece o ab"
+echo "  # ou: brew install httpd"
 exit 1
 
