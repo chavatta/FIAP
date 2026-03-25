@@ -36,7 +36,7 @@ Na raiz:
 
 ### 2) Subir stack local e provar 9 containers (1:00–3:00)
 
-```bash
+```powershell
 docker-compose down -v
 docker-compose up -d
 docker-compose ps
@@ -48,54 +48,45 @@ Ponto de fala:
 
 ### 3) Provar health dos serviços (3:00–4:00)
 
-```bash
-curl -sS http://localhost:8001/health; echo
-curl -sS http://localhost:8002/health; echo
-curl -sS http://localhost:8003/health; echo
-curl -sS http://localhost:8004/health; echo
-curl -sS http://localhost:8005/health; echo
+```powershell
+Invoke-WebRequest -Uri http://localhost:8001/health -UseBasicParsing | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri http://localhost:8002/health -UseBasicParsing | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri http://localhost:8003/health -UseBasicParsing | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri http://localhost:8004/health -UseBasicParsing | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri http://localhost:8005/health -UseBasicParsing | Select-Object -ExpandProperty Content
 ```
 
 ### 4) Fluxo completo (Auth → Flag/Targeting → Evaluation) (4:00–7:00)
 
 1) Criar API key no `auth-service`:
 
-```bash
-curl -sS -X POST http://localhost:8001/admin/keys \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer admin-secreto-123" \
-  -d '{"name":"evaluation-service"}'
+```powershell
+Invoke-WebRequest -Uri http://localhost:8001/admin/keys -Method POST -Headers @{"Content-Type"="application/json"; "Authorization"="Bearer admin-secreto-123"} -Body '{"name":"evaluation-service"}' -UseBasicParsing | Select-Object -ExpandProperty Content
 ```
 
 2) Copiar o campo `key` e setar no terminal:
 
-```bash
-KEY="COLE_AQUI_A_KEY"
+```powershell
+$KEY = "COLE_AQUI_A_KEY"
 ```
 
 3) Criar flag:
 
-```bash
-curl -sS -X POST http://localhost:8002/flags \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $KEY" \
-  -d '{"name":"enable-new-dashboard","description":"demo pdf","is_enabled":true}'
+```powershell
+Invoke-WebRequest -Uri http://localhost:8002/flags -Method POST -Headers @{"Content-Type"="application/json"; "Authorization"="Bearer $KEY"} -Body '{"name":"enable-new-dashboard","description":"demo pdf","is_enabled":true}' -UseBasicParsing | Select-Object -ExpandProperty Content
 ```
 
 4) Criar regra (50%):
 
-```bash
-curl -sS -X POST http://localhost:8003/rules \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $KEY" \
-  -d '{"flag_name":"enable-new-dashboard","is_enabled":true,"rules":{"type":"PERCENTAGE","value":50}}'
+```powershell
+Invoke-WebRequest -Uri http://localhost:8003/rules -Method POST -Headers @{"Content-Type"="application/json"; "Authorization"="Bearer $KEY"} -Body '{"flag_name":"enable-new-dashboard","is_enabled":true,"rules":{"type":"PERCENTAGE","value":50}}' -UseBasicParsing | Select-Object -ExpandProperty Content
 ```
 
 5) Chamar evaluate (true/false):
 
-```bash
-curl -sS "http://localhost:8004/evaluate?user_id=user-123&flag_name=enable-new-dashboard"; echo
-curl -sS "http://localhost:8004/evaluate?user_id=user-abc&flag_name=enable-new-dashboard"; echo
+```powershell
+Invoke-WebRequest -Uri "http://localhost:8004/evaluate?user_id=user-123&flag_name=enable-new-dashboard" -UseBasicParsing | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri "http://localhost:8004/evaluate?user_id=user-abc&flag_name=enable-new-dashboard" -UseBasicParsing | Select-Object -ExpandProperty Content
 ```
 
 Ponto de fala:
@@ -133,7 +124,7 @@ No AWS Console, mostrar:
 
 No terminal com `kubectl` configurado:
 
-```bash
+```powershell
 kubectl get pods -A
 kubectl get pods -n auth
 kubectl get pods -n flag
@@ -146,25 +137,25 @@ kubectl get pods -n analytics
 
 1) Mostrar Service do controller:
 
-```bash
+```powershell
 kubectl get svc -n ingress-nginx
 ```
 
 2) Mostrar Ingress:
 
-```bash
+```powershell
 kubectl get ingress -A
 ```
 
 3) Copiar o DNS/IP do Load Balancer e testar:
 
-```bash
-LB="http://SEU-LB-DNS-OU-IP"
+```powershell
+$LB = "http://SEU-LB-DNS-OU-IP"
 
-curl -sS "$LB/auth/health"; echo
-curl -sS "$LB/flags/health"; echo
-curl -sS "$LB/targeting/health"; echo
-curl -sS "$LB/evaluation/health"; echo
+Invoke-WebRequest -Uri "$LB/auth/health" -UseBasicParsing | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri "$LB/flags/health" -UseBasicParsing | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri "$LB/targeting/health" -UseBasicParsing | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri "$LB/evaluation/health" -UseBasicParsing | Select-Object -ExpandProperty Content
 ```
 
 Opcional: fazer 1 chamada real no evaluate via LB (se já tiver flag/rule no RDS).
@@ -175,7 +166,7 @@ Opcional: fazer 1 chamada real no evaluate via LB (se já tiver flag/rule no RDS
 
 ### 9) Mostrar HPAs (16:00–16:30)
 
-```bash
+```powershell
 kubectl get hpa -A
 kubectl get hpa -n evaluation
 kubectl get hpa -n analytics
@@ -185,15 +176,15 @@ kubectl get hpa -n analytics
 
 Em um terminal:
 
-```bash
-watch -n 2 kubectl get hpa -n evaluation
+```powershell
+while ($true) { kubectl get hpa -n evaluation; Start-Sleep 2 }
 ```
 
 Em outro terminal, gerar carga:
 
-```bash
-# Preferido: use o script do repo (usa hey se existir, fallback para ab)
-bash scripts/stress-test-evaluation.sh --lb "$LB" --duration 60s --concurrency 50
+```powershell
+# Preferido: use o script do repo (use WSL para bash)
+wsl bash scripts/stress-test-evaluation.sh --lb "$LB" --duration 60s --concurrency 50
 
 # Alternativa (se quiser rodar direto):
 # hey -z 60s -c 50 "$LB/evaluation/evaluate?user_id=user-123&flag_name=enable-new-dashboard"
@@ -206,9 +197,9 @@ Mostrar replicas subindo (`kubectl get pods -n evaluation`).
 - No console SQS, enviar várias mensagens manualmente (ou via CLI).
 - Em terminal:
 
-```bash
-watch -n 2 kubectl get hpa -n analytics
-watch -n 2 kubectl get pods -n analytics
+```powershell
+while ($true) { kubectl get hpa -n analytics; Start-Sleep 2 }
+while ($true) { kubectl get pods -n analytics; Start-Sleep 2 }
 ```
 
 ### 12) Provar dados no DynamoDB (19:00–19:30)

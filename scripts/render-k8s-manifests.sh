@@ -57,12 +57,14 @@ SERVICES_DIRS=(
 
 for dir in "${SERVICES_DIRS[@]}"; do
   [ -d "$dir" ] || continue
-  service_name="$(basename "$(dirname "$dir")")"
-  mkdir -p "$OUT_DIR/$service_name"
+  # Pastas do repo: auth-service/k8s → saída auth/ (igual a k8s-apply.sh e docs)
+  service_repo="$(basename "$(dirname "$dir")")"
+  out_name="${service_repo%-service}"
+  mkdir -p "$OUT_DIR/$out_name"
 
   for file in "$dir"/*.yml; do
     [ -f "$file" ] || continue
-    out_file="$OUT_DIR/$service_name/$(basename "$file")"
+    out_file="$OUT_DIR/$out_name/$(basename "$file")"
     envsubst < "$file" > "$out_file"
   done
 done

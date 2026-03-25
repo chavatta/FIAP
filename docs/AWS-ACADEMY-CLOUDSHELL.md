@@ -50,17 +50,100 @@ aws dynamodb create-table \
 
 ---
 
-## 4) SQS — criar fila
+## 4) RDS — criar 3 instâncias PostgreSQL
 
 ```bash
-aws sqs create-queue \
-  --queue-name fiap-evaluation-events \
-  --region $REGION 2>/dev/null || echo "Fila já existe"
+# Obter VPC, CIDR e subnets padrão (RDS exige DB subnet group com subnets em pelo menos 2 AZs; a VPC padrão costuma atender)
+VPC_ID=$(aws ec2 describe-vpcs --filters "Name=is-default,Values=true" --query 'Vpcs[0].VpcId' --output text --region $REGION)
+VPC_CIDR=$(aws ec2 describe-vpcs --vpc-ids "$VPC_ID" --query 'Vpcs[0].CidrBlock' --output text --region $REGION)
+# describe-subnets com --output text devolve IDs separados por tab; --subnet-ids precisa de vários argumentos (não uma única string "a,b,c")
+SUBNET_IDS=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --query 'Subnets[*].SubnetId' --output text --region $REGION)
+SG_ID=$(aws ec2 describe-security-groups --filters "Name=vpc-id,Values=$VPC_ID" "Name=group-name,Values=default" --query 'SecurityGroups[0].GroupId' --output text --region $REGION)
 
-# Obter URL (use no .env como SQS_QUEUE_URL)
-aws sqs get-queue-url --queue-name fiap-evaluation-events --region $REGION --query 'QueueUrl' --output text
+# Liberar 5432 a partir da VPC (o SG "default" do RDS só permite tráfego entre membros do mesmo SG; pods EKS costumam usar outro SG)
+aws ec2 authorize-security-group-ingress \
+  --group-id "$SG_ID" \
+  --protocol tcp \
+  --port 5432 \
+  --cidr "$VPC_CIDR" \
+  --region "$REGION" 2>/dev/null || echo "Regra 5432 já existe ou não pôde ser criada"
+
+# Criar DB subnet group (se não existir)
+if ! aws rds describe-db-subnet-groups --db-subnet-group-name fiap-subnet-group --region "$REGION" &>/dev/null; then
+  aws rds create-db-subnet-group \
+    --db-subnet-group-name fiap-subnet-group \
+    --db-subnet-group-description "Subnet group for FIAP RDS" \
+    --subnet-ids $(echo "$SUBNET_IDS" | tr '\t' ' ') \
+    --region "$REGION"
+else
+  echo "DB subnet group fiap-subnet-group já existe"
+fi
+
+# RDS para auth-service (Postgres 16 alinhado ao docker-compose do repositório)
+aws rds create-db-instance \
+  --db-instance-identifier fiap-auth-db \
+  --db-instance-class db.t3.micro \
+  --engine postgres \
+  --engine-version 16 \
+  --master-username auth_user \
+  --master-user-password auth_password \
+  --allocated-storage 20 \
+  --db-name auth_db \
+  --vpc-security-group-ids "$SG_ID" \
+  --db-subnet-group-name fiap-subnet-group \
+  --region "$REGION" \
+  --publicly-accessible \
+  --backup-retention-period 0 \
+  --no-multi-az
+
+# RDS para flag-service
+aws rds create-db-instance \
+  --db-instance-identifier fiap-flag-db \
+  --db-instance-class db.t3.micro \
+  --engine postgres \
+  --engine-version 16 \
+  --master-username flag_user \
+  --master-user-password flag_password \
+  --allocated-storage 20 \
+  --db-name flag_db \
+  --vpc-security-group-ids "$SG_ID" \
+  --db-subnet-group-name fiap-subnet-group \
+  --region "$REGION" \
+  --publicly-accessible \
+  --backup-retention-period 0 \
+  --no-multi-az
+
+# RDS para targeting-service
+aws rds create-db-instance \
+  --db-instance-identifier fiap-targeting-db \
+  --db-instance-class db.t3.micro \
+  --engine postgres \
+  --engine-version 16 \
+  --master-username targeting_user \
+  --master-user-password targeting_password \
+  --allocated-storage 20 \
+  --db-name targeting_db \
+  --vpc-security-group-ids "$SG_ID" \
+  --db-subnet-group-name fiap-subnet-group \
+  --region "$REGION" \
+  --publicly-accessible \
+  --backup-retention-period 0 \
+  --no-multi-az
+
+# Aguardar RDS ficarem disponíveis (10–15 min)
+aws rds wait db-instance-available --db-instance-identifier fiap-auth-db --region $REGION
+aws rds wait db-instance-available --db-instance-identifier fiap-flag-db --region $REGION
+aws rds wait db-instance-available --db-instance-identifier fiap-targeting-db --region $REGION
+
+# Obter endpoints
+AUTH_DB_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier fiap-auth-db --region $REGION --query 'DBInstances[0].Endpoint.Address' --output text)
+FLAG_DB_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier fiap-flag-db --region $REGION --query 'DBInstances[0].Endpoint.Address' --output text)
+TARGETING_DB_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier fiap-targeting-db --region $REGION --query 'DBInstances[0].Endpoint.Address' --output text)
+
+echo "Auth DB Endpoint: $AUTH_DB_ENDPOINT"
+echo "Flag DB Endpoint: $FLAG_DB_ENDPOINT"
+echo "Targeting DB Endpoint: $TARGETING_DB_ENDPOINT"
 ```
-
 ---
 
 ## 5) EKS — criar cluster
