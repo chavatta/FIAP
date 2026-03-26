@@ -109,19 +109,6 @@ Antes de rodar, crie `.env` a partir de `.env.example`.
 
 ---
 
-## Documentação
-
-| Documento | Descrição |
-|-----------|-----------|
-| [docs/WINDOWS-SETUP.md](docs/WINDOWS-SETUP.md) | Passo a passo para rodar no Windows |
-| [docs/WINDOWS-COMPOSE-FIX.md](docs/WINDOWS-COMPOSE-FIX.md) | Correção de erros de variáveis no Windows |
-| [docs/VIDEO-DEMO-ROTEIRO.md](docs/VIDEO-DEMO-ROTEIRO.md) | Roteiro do vídeo de demonstração |
-| [docs/AWS-ACADEMY-EKS-GUIA-COMPLETO.md](docs/AWS-ACADEMY-EKS-GUIA-COMPLETO.md) | Deploy no EKS (AWS Academy / LabRole) |
-| [docs/AWS-ACADEMY-CLOUDSHELL.md](docs/AWS-ACADEMY-CLOUDSHELL.md) | Comandos CloudShell para provisionar EKS via CLI |
-| [k8s/README.md](k8s/README.md) | Kubernetes — manifests e ordem de apply |
-
----
-
 ## Kubernetes (EKS)
 
 Para deploy na nuvem:
