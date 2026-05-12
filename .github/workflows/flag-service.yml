@@ -1,0 +1,23 @@
+name: Flag Service Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'flag-service/**'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'flag-service/**'
+
+jobs:
+  dummy_job:
+    name: Dummy Job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Placeholder
+        run: echo "TODO implement this job"

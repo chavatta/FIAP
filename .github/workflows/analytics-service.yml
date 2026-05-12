@@ -1,0 +1,23 @@
+name: Analytics Service Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'analytics-service/**'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'analytics-service/**'
+
+jobs:
+  dummy_job:
+    name: Dummy Job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Placeholder
+        run: echo "TODO implement this job"

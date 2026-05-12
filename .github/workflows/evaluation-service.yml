@@ -1,0 +1,23 @@
+name: Evaluation Service Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'evaluation-service/**'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'evaluation-service/**'
+
+jobs:
+  dummy_job:
+    name: Dummy Job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Placeholder
+        run: echo "TODO implement this job"

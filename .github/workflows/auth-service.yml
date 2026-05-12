@@ -177,3 +177,15 @@ jobs:
           docker push \
             ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
   CD:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    needs: docker_build_and_push
+
+    defaults:
+      run:
+        working-directory: auth-service
+
+    steps:
+      - name: CD
+        run: echo "construindo..."
