@@ -114,7 +114,6 @@ jobs:
 
 
   docker_build_and_push:
-    docker_build_and_push:
     name: Docker Build and Push
     runs-on: ubuntu-latest
     timeout-minutes: 20
