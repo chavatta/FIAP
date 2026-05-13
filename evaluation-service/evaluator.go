@@ -57,7 +57,9 @@ func (a *App) getCombinedFlagInfo(flagName string) (*CombinedFlagInfo, error) {
 	// 3. Salvar no Cache
 	jsonData, err := json.Marshal(info)
 	if err == nil {
-		a.RedisClient.Set(ctx, cacheKey, jsonData, CACHE_TTL).Err()
+		if err := a.RedisClient.Set(ctx, cacheKey, jsonData, CACHE_TTL).Err(); err != nil {
+			log.Printf("failed to cache evaluation: %v", err)
+		}
 	}
 
 	return info, nil
@@ -111,8 +113,11 @@ func (a *App) fetchFlag(flagName string) (*Flag, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao chamar flag-service: %w", err)
 	}
-	defer resp.Body.Close()
-
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("failed to close response body: %v", err)
+		}
+	}()
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, &NotFoundError{flagName}
 	}
@@ -138,8 +143,11 @@ func (a *App) fetchRule(flagName string) (*TargetingRule, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao chamar targeting-service: %w", err)
 	}
-	defer resp.Body.Close()
-
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("failed to close response body: %v", err)
+		}
+	}()
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil // Sem regra de segmentação — comportamento esperado
 	}
