@@ -98,7 +98,7 @@ jobs:
 
       - name: Run gosec
         run: |
-          gosec - severity high ./...
+          gosec -severity high ./...
 
       # -------------------------
       # SCA - Dependency/FileSystem Scan
