@@ -136,23 +136,18 @@ func (a *App) fetchFromServices(flagName string) (*CombinedFlagInfo, error) {
 
 // fetchFlag (função helper)
 func (a *App) fetchFlag(flagName string) (*Flag, error) {
-	url := fmt.Sprintf("%s/flags/%s", a.FlagServiceURL, flagName)
+	baseURL, err := url.Parse(a.FlagServiceURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid flag-service URL: %w", err)
+	}
+
+	baseURL.Path = fmt.Sprintf("/flags/%s", flagName)
 
 	apiKey := os.Getenv("SERVICE_API_KEY")
-	allowedHosts := map[string]bool{
-		"auth-service": true,
-		"user-service": true,
-		"localhost":    true, // remove in production if unnecessary
-	}
 
-	validatedURL, err := validateServiceURL(url, allowedHosts)
+	req, err := http.NewRequest("GET", baseURL.String(), nil)
 	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", validatedURL.String(), nil)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("erro ao criar request: %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+apiKey)
@@ -161,23 +156,28 @@ func (a *App) fetchFlag(flagName string) (*Flag, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao chamar flag-service: %w", err)
 	}
+
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Printf("failed to close response body: %v", err)
 		}
 	}()
+
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, &NotFoundError{flagName}
 	}
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("flag-service retornou status %d", resp.StatusCode)
 	}
 
 	body, _ := io.ReadAll(resp.Body)
+
 	var flag Flag
 	if err := json.Unmarshal(body, &flag); err != nil {
 		return nil, fmt.Errorf("erro ao desserializar resposta do flag-service: %w", err)
 	}
+
 	return &flag, nil
 }
 
