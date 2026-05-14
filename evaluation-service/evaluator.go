@@ -182,32 +182,48 @@ func (a *App) fetchFlag(flagName string) (*Flag, error) {
 }
 
 func (a *App) fetchRule(flagName string) (*TargetingRule, error) {
-	url := fmt.Sprintf("%s/rules/%s", a.TargetingServiceURL, flagName)
-	apiKey := os.Getenv("SERVICE_API_KEY") // Usa a mesma chave
-	req, _ := http.NewRequest("GET", url, nil)
+	baseURL, err := url.Parse(a.TargetingServiceURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid targeting-service URL: %w", err)
+	}
+
+	baseURL.Path = fmt.Sprintf("/rules/%s", flagName)
+
+	apiKey := os.Getenv("SERVICE_API_KEY")
+
+	req, err := http.NewRequest("GET", baseURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao criar request: %w", err)
+	}
+
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 
 	resp, err := a.HttpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao chamar targeting-service: %w", err)
 	}
+
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Printf("failed to close response body: %v", err)
 		}
 	}()
+
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil // Sem regra de segmentação — comportamento esperado
 	}
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("targeting-service retornou status %d", resp.StatusCode)
 	}
 
 	body, _ := io.ReadAll(resp.Body)
+
 	var rule TargetingRule
 	if err := json.Unmarshal(body, &rule); err != nil {
 		return nil, fmt.Errorf("erro ao desserializar resposta do targeting-service: %w", err)
 	}
+
 	return &rule, nil
 }
 
