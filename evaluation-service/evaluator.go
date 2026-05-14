@@ -4,11 +4,9 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -20,36 +18,6 @@ const (
 	// Tempo de vida do cache em segundos
 	CACHE_TTL = 30 * time.Second
 )
-
-func validateServiceURL(rawURL string, allowedHosts map[string]bool) (*url.URL, error) {
-	parsedURL, err := url.Parse(rawURL)
-	if err != nil {
-		return nil, fmt.Errorf("invalid URL: %w", err)
-	}
-
-	// Allow only HTTP/HTTPS
-	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
-		return nil, errors.New("invalid URL scheme")
-	}
-
-	host := parsedURL.Hostname()
-
-	// Prevent localhost/internal access
-	ip := net.ParseIP(host)
-	if ip != nil {
-		if ip.IsLoopback() || ip.IsPrivate() {
-			return nil, errors.New("private/internal IPs are not allowed")
-		}
-	}
-
-	// Optional but strongly recommended:
-	// allow only trusted hosts
-	if !allowedHosts[host] {
-		return nil, fmt.Errorf("host not allowed: %s", host)
-	}
-
-	return parsedURL, nil
-}
 
 // getDecision é o wrapper principal
 func (a *App) getDecision(userID, flagName string) (bool, error) {
