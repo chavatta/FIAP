@@ -1,0 +1,26 @@
+name: CI — analytics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/analytics/**"
+      - ".github/workflows/ci-analytics.yml"
+      - ".github/workflows/reusable-python-microservice.yml"
+  pull_request:
+    paths:
+      - "services/analytics/**"
+      - ".github/workflows/ci-analytics.yml"
+      - ".github/workflows/reusable-python-microservice.yml"
+
+jobs:
+  pipeline:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/reusable-python-microservice.yml
+    secrets: inherit
+    with:
+      service_name: analytics
+      service_path: services/analytics
+      ecr_repository: togglemaster-analytics
+      gitops_manifest: gitops/apps/analytics/deployment.yaml

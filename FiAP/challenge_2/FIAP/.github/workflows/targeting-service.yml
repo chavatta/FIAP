@@ -1,0 +1,23 @@
+name: Targeting Service Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'targeting-service/**'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'targeting-service/**'
+
+jobs:
+  dummy_job:
+    name: Dummy Job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Placeholder
+        run: echo "TODO implement this job"

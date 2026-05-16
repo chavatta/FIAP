@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flag
+  namespace: togglemaster
+  labels:
+    app.kubernetes.io/name: flag
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: flag
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http

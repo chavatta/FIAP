@@ -1,0 +1,23 @@
+# Substitua repoURL pelo repositório real (monorepo ou repo GitOps dedicado).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: togglemaster-auth
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/chavatta/FIAP_Challenge3.git
+    targetRevision: main
+    path: gitops/apps/auth
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: togglemaster
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

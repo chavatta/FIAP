@@ -1,0 +1,26 @@
+name: CI — flag
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/flag/**"
+      - ".github/workflows/ci-flag.yml"
+      - ".github/workflows/reusable-python-microservice.yml"
+  pull_request:
+    paths:
+      - "services/flag/**"
+      - ".github/workflows/ci-flag.yml"
+      - ".github/workflows/reusable-python-microservice.yml"
+
+jobs:
+  pipeline:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/reusable-python-microservice.yml
+    secrets: inherit
+    with:
+      service_name: flag
+      service_path: services/flag
+      ecr_repository: togglemaster-flag
+      gitops_manifest: gitops/apps/flag/deployment.yaml

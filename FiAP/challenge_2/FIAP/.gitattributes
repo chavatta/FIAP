@@ -1,0 +1,2 @@
+# Scripts shell precisam de LF (Unix). CRLF quebra `set -o pipefail` no Git Bash / WSL.
+*.sh text eol=lf

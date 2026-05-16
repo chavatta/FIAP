@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: targeting
+  namespace: togglemaster
+  labels:
+    app.kubernetes.io/name: targeting
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: targeting
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http
