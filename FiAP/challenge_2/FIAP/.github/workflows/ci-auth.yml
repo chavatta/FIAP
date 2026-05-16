@@ -1,0 +1,28 @@
+name: CI — auth
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/auth/**"
+      - ".github/workflows/ci-auth.yml"
+      - ".github/workflows/reusable-go-microservice.yml"
+      - ".golangci.yml"
+  pull_request:
+    paths:
+      - "services/auth/**"
+      - ".github/workflows/ci-auth.yml"
+      - ".github/workflows/reusable-go-microservice.yml"
+      - ".golangci.yml"
+
+jobs:
+  pipeline:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/reusable-go-microservice.yml
+    secrets: inherit
+    with:
+      service_name: auth
+      service_path: services/auth
+      ecr_repository: togglemaster-auth
+      gitops_manifest: gitops/apps/auth/deployment.yaml

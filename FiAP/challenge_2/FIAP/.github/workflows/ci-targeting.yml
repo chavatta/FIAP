@@ -1,0 +1,26 @@
+name: CI — targeting
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/targeting/**"
+      - ".github/workflows/ci-targeting.yml"
+      - ".github/workflows/reusable-python-microservice.yml"
+  pull_request:
+    paths:
+      - "services/targeting/**"
+      - ".github/workflows/ci-targeting.yml"
+      - ".github/workflows/reusable-python-microservice.yml"
+
+jobs:
+  pipeline:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/reusable-python-microservice.yml
+    secrets: inherit
+    with:
+      service_name: targeting
+      service_path: services/targeting
+      ecr_repository: togglemaster-targeting
+      gitops_manifest: gitops/apps/targeting/deployment.yaml

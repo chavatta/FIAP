@@ -1,0 +1,21 @@
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfvars
+terraform/backend.hcl
+# Mantenha .terraform.lock.hcl versionado (recomendado).
+crash.log
+override.tf
+GUIA_EXECUCAO_E_ENTREGA.md
+kubectl.exe
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Secrets locais
+*.pem
+.env
+.env.*

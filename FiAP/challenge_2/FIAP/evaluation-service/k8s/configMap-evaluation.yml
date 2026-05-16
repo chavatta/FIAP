@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: evaluation-config
+  namespace: evaluation
+data:
+  PORT: "8004"
+  # ElastiCache (Serverless/Valkey com encryption in transit): use rediss:// (TLS).
+  # Local/docker-compose continua com redis://redis:6379 no .env, não este manifesto.
+  REDIS_URL: "rediss://${__ELASTICACHE_ENDPOINT__}:6379"
+  FLAG_SERVICE_URL: "http://flag-service.flag.svc.cluster.local"
+  TARGETING_SERVICE_URL: "http://targeting-service.targeting.svc.cluster.local"
+  AWS_REGION: "us-east-1"
+  # Deixe vazio se não usar SQS; preencha a URL da fila em produção
+  AWS_SQS_URL: "${__SQS_QUEUE_URL__}"

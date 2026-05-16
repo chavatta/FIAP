@@ -1,0 +1,191 @@
+name: Evaluation Service Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'evaluation-service/**'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'evaluation-service/**'
+
+jobs:
+  build_and_unit_test:
+    name: Build and Unit Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10 
+
+    defaults:
+      run:
+        working-directory: evaluation-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test ./...
+  
+      - name: Build application
+        run: go build -o evaluation-service .
+
+  static_analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    needs: build_and_unit_test
+
+    defaults:
+      run:
+        working-directory: evaluation-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          working-directory: evaluation-service
+  
+  security_scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    needs: static_analysis
+
+    defaults:
+      run:
+        working-directory: evaluation-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+
+      # -------------------------
+      # SAST - Static Code Analysis
+      # -------------------------
+      - name: Install gosec
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+      - name: Run gosec
+        run: |
+          gosec -severity high ./...
+
+      # -------------------------
+      # SCA - Dependency/FileSystem Scan
+      # -------------------------
+      - name: Run Trivy FS Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: ./evaluation-service
+          severity: CRITICAL
+          exit-code: 1
+          ignore-unfixed: true
+
+
+  docker_build_and_push:
+    name: Docker Build and Push
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    needs: security_scan
+
+    env:
+      AWS_REGION: us-east-1
+      ECR_REPOSITORY: evaluation-service
+
+    defaults:
+      run:
+        working-directory: evaluation-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Generate image tag
+        id: vars
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "IMAGE_TAG=v1.0.0-${SHORT_SHA}" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t $ECR_REPOSITORY:$IMAGE_TAG .
+
+      # ----------------------------------------
+      # Container Security Scan (Trivy Image)
+      # Block pipeline if CRITICAL vulns exist
+      # ----------------------------------------
+      - name: Scan Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          severity: CRITICAL
+          exit-code: 1
+          ignore-unfixed: true
+
+      - name: Tag image for ECR
+        run: |
+          docker tag \
+            $ECR_REPOSITORY:$IMAGE_TAG \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Push image to Amazon ECR
+        run: |
+          docker push \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+  CD:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    needs: docker_build_and_push
+
+    defaults:
+      run:
+        working-directory: evaluation-service
+
+    steps:
+      - name: CD
+        run: echo "construindo..."

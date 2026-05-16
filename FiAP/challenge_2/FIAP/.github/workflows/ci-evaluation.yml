@@ -1,0 +1,28 @@
+name: CI — evaluation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/evaluation/**"
+      - ".github/workflows/ci-evaluation.yml"
+      - ".github/workflows/reusable-go-microservice.yml"
+      - ".golangci.yml"
+  pull_request:
+    paths:
+      - "services/evaluation/**"
+      - ".github/workflows/ci-evaluation.yml"
+      - ".github/workflows/reusable-go-microservice.yml"
+      - ".golangci.yml"
+
+jobs:
+  pipeline:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/reusable-go-microservice.yml
+    secrets: inherit
+    with:
+      service_name: evaluation
+      service_path: services/evaluation
+      ecr_repository: togglemaster-evaluation
+      gitops_manifest: gitops/apps/evaluation/deployment.yaml

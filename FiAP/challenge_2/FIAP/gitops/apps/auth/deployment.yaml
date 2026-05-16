@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  namespace: togglemaster
+  labels:
+    app.kubernetes.io/name: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: auth
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: auth
+    spec:
+      containers:
+        - name: auth
+          # CI atualiza esta tag (GitOps). Imagem inicial pode ser substituída pelo ECR.
+          image: 633853515534.dkr.ecr.us-east-1.amazonaws.com/togglemaster-auth:v1.0.0-01422d2f975d4eaa658d51ff3ae93d5ca6acd00a
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
